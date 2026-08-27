@@ -1,0 +1,10 @@
+# Insert dsh-plugin-copilot: registers the `github-copilot` LLM provider route
+# (OAuth device-flow login tools + CopilotAdapter over chat completions /
+# responses / messages wire protocols). The auth file, enterprise URL, and
+# credential-ref env are editable on the settings page via the plugin's
+# settings section (same shape as this config block).
+- insert:
+    - id: dsh-plugin-copilot
+      name: '@huanlin/dsh-plugin-copilot'
+      config:
+        githubTokenEnv: GITHUB_COPILOT_TOKEN

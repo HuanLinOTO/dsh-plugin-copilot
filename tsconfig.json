@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    "target": "ES2024",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2024"],
+    "types": ["node"],
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "declarationMap": false,
+    "sourceMap": false,
+    "outDir": "lib/types",
+    "rootDir": "src",
+    "typeRoots": [
+      "./node_modules/@types",
+      "C:/Users/Administrator/.dsh/source/current/node_modules/@types",
+      "C:/Users/Administrator/.dsh/source/current/scripts/types"
+    ],
+    "paths": {
+      "@deepseek-ai/cordis": ["C:/Users/Administrator/.dsh/source/current/vendor/cordis/lib/types/index.d.ts"],
+      "@deepseek-ai/cosmokit": ["C:/Users/Administrator/.dsh/source/current/vendor/cosmokit/lib/types/index.d.ts"],
+      "@deepseek-ai/schemastery": ["C:/Users/Administrator/.dsh/source/current/vendor/schemastery/lib/types/index.d.ts"],
+      "@deepseek-ai/dsh-invariants": ["C:/Users/Administrator/.dsh/source/current/packages/runtime-diagnostics/invariants/lib/types/index.d.ts"],
+      "@deepseek-ai/dsh-llm": ["C:/Users/Administrator/.dsh/source/current/packages/llm/llm/lib/types/index.d.ts"],
+      "@deepseek-ai/dsh-tools": ["C:/Users/Administrator/.dsh/source/current/packages/core/tools/lib/types/index.d.ts"],
+      "@deepseek-ai/dsh-settings": ["C:/Users/Administrator/.dsh/source/current/packages/settings/settings/lib/types/index.d.ts"],
+      "@deepseek-ai/dsh-settings/types": ["C:/Users/Administrator/.dsh/source/current/packages/settings/settings/lib/types/types.d.ts"],
+      "@deepseek-ai/dsh-timeout": ["C:/Users/Administrator/.dsh/source/current/packages/util/timeout/lib/types/index.d.ts"],
+      "@deepseek-ai/dsh-credentials": ["C:/Users/Administrator/.dsh/source/current/packages/credentials/credentials/lib/types/index.d.ts"],
+      "@deepseek-ai/dsh-attachment": ["C:/Users/Administrator/.dsh/source/current/packages/attachment/attachment/lib/types/index.d.ts"],
+      "@deepseek-ai/dsh-home-paths": ["C:/Users/Administrator/.dsh/source/current/packages/util/home-paths/lib/types/index.d.ts"],
+      "@deepseek-ai/dsh-launch-environment": ["C:/Users/Administrator/.dsh/source/current/packages/util/launch-environment/lib/types/index.d.ts"]
+    }
+  },
+  "include": ["src"]
+}

@@ -1,13 +1,13 @@
 {
   "name": "@huanlin/dsh-plugin-copilot",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publishConfig": {
     "access": "public"
   },
   "keywords": [
     "dsh-plugin"
   ],
-  "description": "GitHub Copilot 模型供应商插件：OAuth 设备流登录，Copilot 托管模型经 chat completions / responses / messages 三协议接入 DSH。 | GitHub Copilot model provider plugin: OAuth device-flow login exposes Copilot-hosted models to DSH over chat completions / responses / messages wire protocols.",
+  "description": "Copilot 引导层插件：WebUI 设置页一键发起 GitHub Copilot 授权（复用 dsh-llm-pi-ai 内置 device-flow），并自动写入 provider profile 激活模型路由。 | Copilot onboarding plugin: one-click GitHub authorization from the WebUI settings card (reusing dsh-llm-pi-ai's builtin device flow) plus automatic provider-profile autofill that activates the model route.",
   "type": "module",
   "license": "MIT",
   "main": "./lib/index.js",
@@ -21,6 +21,10 @@
       "types": "./lib/types/invariant.d.ts",
       "import": "./lib/invariant.js"
     },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
@@ -28,47 +32,89 @@
     "lib/",
     "cordis.patch.yml"
   ],
-  "scripts": {
-    "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "vitest run",
-    "build": "tsdown -c tsdown.config.ts && tsc -p tsconfig.json"
-  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-store",
+        "@deepseek-ai/dsh-client-ui-renderer",
+        "@deepseek-ai/dsh-client-ui-settings-plugins",
+        "@deepseek-ai/dsh-client-ui-slots"
+      ],
+      "platform": "web"
     }
   },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "build": "tsdown -c tsdown.config.ts && tsc -p tsconfig.json",
+    "bundle:client": "tsdown -c tsdown.config.ts"
+  },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "^4.0.1-rc.1",
-    "@deepseek-ai/dsh-attachment": "^0.1.0-rc.1",
-    "@deepseek-ai/dsh-credentials": "^0.1.0-rc.1",
-    "@deepseek-ai/dsh-home-paths": "^0.1.0-rc.1",
-    "@deepseek-ai/dsh-invariants": "^0.1.0-rc.1",
-    "@deepseek-ai/dsh-launch-environment": "^0.0.1-rc.1",
-    "@deepseek-ai/dsh-llm": "^0.1.0-rc.1",
-    "@deepseek-ai/dsh-settings": "^0.1.0-rc.1",
-    "@deepseek-ai/dsh-timeout": "^0.1.0-rc.1",
-    "@deepseek-ai/dsh-tools": "^0.1.0-rc.1",
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-authorization": "^0.1.2-alpha.1",
+    "@deepseek-ai/dsh-client-locale": "^0.1.2-alpha.1",
+    "@deepseek-ai/dsh-client-store": "^0.1.2-alpha.1",
+    "@deepseek-ai/dsh-client-ui-renderer": "^0.1.2-alpha.1",
+    "@deepseek-ai/dsh-client-ui-settings-plugins": "^0.1.2-alpha.1",
+    "@deepseek-ai/dsh-client-ui-slots": "^0.1.2-alpha.1",
+    "@deepseek-ai/dsh-credentials": "^0.1.2-alpha.1",
+    "@deepseek-ai/dsh-invariants": "^0.1.2-alpha.1",
+    "@deepseek-ai/dsh-settings": "^0.1.2-alpha.1",
+    "@deepseek-ai/dsh-tools": "^0.1.2-alpha.1",
+    "react": "^18.2.0",
     "schemastery": "^3.18.0"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/cordis": { "optional": true },
-    "@deepseek-ai/dsh-attachment": { "optional": true },
-    "@deepseek-ai/dsh-credentials": { "optional": true },
-    "@deepseek-ai/dsh-home-paths": { "optional": true },
-    "@deepseek-ai/dsh-invariants": { "optional": true },
-    "@deepseek-ai/dsh-launch-environment": { "optional": true },
-    "@deepseek-ai/dsh-llm": { "optional": true },
-    "@deepseek-ai/dsh-settings": { "optional": true },
-    "@deepseek-ai/dsh-timeout": { "optional": true },
-    "@deepseek-ai/dsh-tools": { "optional": true },
-    "schemastery": { "optional": true }
-  },
-  "dependencies": {
-    "eventsource-parser": "^3.1.0"
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-authorization": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-client-locale": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-client-store": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-client-ui-renderer": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-client-ui-settings-plugins": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-client-ui-slots": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-credentials": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-invariants": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-settings": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-tools": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "schemastery": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/node": "^22.20.1",
+    "@types/react": "~18.3.31",
+    "jsdom": "^30.0.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "schemastery": "^3.18.0",
     "tsdown": "^0.15.0",
     "typescript": "^5.9.2",

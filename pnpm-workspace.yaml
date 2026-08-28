@@ -1,2 +1,15 @@
 allowBuilds:
   esbuild: true
+overrides:
+  '@deepseek-ai/cordis': link:C:/Users/Administrator/.dsh/source/current/vendor/cordis
+  '@deepseek-ai/dsh-authorization': link:C:/Users/Administrator/.dsh/source/current/packages/credentials/authorization
+  '@deepseek-ai/dsh-credentials': link:C:/Users/Administrator/.dsh/source/current/packages/credentials/credentials
+  '@deepseek-ai/dsh-invariants': link:C:/Users/Administrator/.dsh/source/current/packages/runtime-diagnostics/invariants
+  '@deepseek-ai/dsh-llm': link:C:/Users/Administrator/.dsh/source/current/packages/llm/llm
+  '@deepseek-ai/dsh-settings': link:C:/Users/Administrator/.dsh/source/current/packages/settings/settings
+  '@deepseek-ai/dsh-tools': link:C:/Users/Administrator/.dsh/source/current/packages/core/tools
+  '@deepseek-ai/dsh-client-locale': link:C:/Users/Administrator/.dsh/source/current/packages/client/locale
+  '@deepseek-ai/dsh-client-store': link:C:/Users/Administrator/.dsh/source/current/packages/client/store
+  '@deepseek-ai/dsh-client-ui-renderer': link:C:/Users/Administrator/.dsh/source/current/packages/client/ui-renderer
+  '@deepseek-ai/dsh-client-ui-settings-plugins': link:C:/Users/Administrator/.dsh/source/current/packages/client/ui-settings-plugins
+  '@deepseek-ai/dsh-client-ui-slots': link:C:/Users/Administrator/.dsh/source/current/packages/client/ui-slots

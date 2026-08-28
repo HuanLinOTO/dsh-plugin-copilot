@@ -1,10 +1,17 @@
-# Insert dsh-plugin-copilot: registers the `github-copilot` LLM provider route
-# (OAuth device-flow login tools + CopilotAdapter over chat completions /
-# responses / messages wire protocols). The auth file, enterprise URL, and
-# credential-ref env are editable on the settings page via the plugin's
-# settings section (same shape as this config block).
+# Insert dsh-plugin-copilot: the Copilot onboarding layer. It registers no
+# provider (dsh-llm-pi-ai's builtin catalog already serves github-copilot);
+# instead it mounts the /copilot/api gateway that proxies the pi-ai
+# device-flow authorization to the WebUI settings card and autofills the
+# llm-pi-ai provider profile. No user-facing config remains.
+#
+# dsh-llm-pi-ai registers its per-provider login flows only under
+# ctx.inject(['authorization']) (src/index.ts), and @deepseek-ai/dsh-authorization
+# is an optional-mount plugin absent from every shipped bundle — without this
+# row the card lands in its "unsupported" state on the default dsh web
+# composition. It needs only the credentials service, which the base bundle
+# already mounts (dsh-credentials-local).
 - insert:
+    - id: authorization
+      name: '@deepseek-ai/dsh-authorization'
     - id: dsh-plugin-copilot
       name: '@huanlin/dsh-plugin-copilot'
-      config:
-        githubTokenEnv: GITHUB_COPILOT_TOKEN

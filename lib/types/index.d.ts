@@ -1,32 +1,53 @@
 /**
- * Register the {@link CopilotAdapter} for the `github-copilot` provider route
- * on `ctx.llm`, with connection facts resolved per request instead of frozen
- * at load: the plugin layers its `cordis.yml` entry config under the optional
- * `dsh-plugin-copilot` user-settings section (`ctx.settings`) and resolves the
- * GitHub bearer per request (the device-flow auth store first, then the
- * `GITHUB_COPILOT_TOKEN`-style credential ref), so a changed enterprise
- * domain, API version, or token reaches the very next request without
- * restarting anything, while an in-flight stream keeps the facts it started
- * with. The one registration-captured fact — the retry policy — re-registers
- * the route in place when it changes.
+ * `@huanlin/dsh-plugin-copilot` — Copilot onboarding layer.
  *
- * Behavior parity target: opencode's GitHub Copilot provider (OAuth device
- * flow, pinned `X-GitHub-Api-Version`, endpoint routing across the chat
- * completions / responses / messages shims, picker + utility model split).
+ * This plugin no longer registers a `github-copilot` provider or adapter:
+ * dsh 0.1.2-alpha.1's `dsh-llm-pi-ai` ships the pi-ai builtin catalog whose
+ * Copilot provider already does everything the 0.1.x adapter did (OAuth
+ * device-flow login, request headers, model catalog, three wire protocols),
+ * and declaring the same provider twice fails the whole profile boot with
+ * `DUPLICATE_DIRECTORY`. What the harness lacks is a way to *reach* that
+ * built-in login from the WebUI — that is this plugin's whole job now:
+ *
+ *   - host half (this module): a `/copilot/api` HTTP gateway that proxies
+ *     `ctx.authorization.begin()` onto the pi-ai Copilot flow, an idempotent
+ *     settings autofill that writes `llm-pi-ai.providers.github-copilot = {}`
+ *     (flipping the route from dormant to active), and a read-only
+ *     `copilot_status` tool;
+ *   - browser half (`src/client/`): a `settings.plugin.item` card in the
+ *     Plugins settings page rendering the device-flow panel.
  *
  * @module @huanlin/dsh-plugin-copilot
  */
 import type { Context } from '@deepseek-ai/cordis';
-import { CopilotAdapter } from './adapter.ts';
-import type { ResolvedCopilotAuth } from './adapter.ts';
-import { Config, resolveConnection, copilotBaseUrl, normalizeEnterpriseDomain } from './config.ts';
-import type { CopilotConfig, CopilotConnection } from './config.ts';
-import { registerCopilotTools } from './tools.ts';
-export { CopilotAdapter, Config, resolveConnection, copilotBaseUrl, normalizeEnterpriseDomain, registerCopilotTools, };
-export type { ResolvedCopilotAuth, CopilotConfig, CopilotConnection };
-export { AuthStoreError, loadStoredAuth, saveStoredAuth, clearStoredAuth } from './auth-store.ts';
-export { startDeviceFlow, pollDeviceFlow } from './device-flow.ts';
-export { STATIC_FALLBACK_MODELS, UTILITY_MODELS, endpointOf, prefersResponsesApi } from './copilot-models.ts';
+import { type SettingsNamespace } from '@deepseek-ai/dsh-settings';
+import z from 'schemastery';
+export { registerCopilotGateway } from './gateway.ts';
+export { registerCopilotTools } from './tools.ts';
+export { COPILOT_PROVIDER, COPILOT_RECORD_KEY, COPILOT_SCOPE, COPILOT_SETTINGS_NS, findCopilotFlow, grantModelIds, joinStatus, recordAddress, } from './status.ts';
+export type { CopilotStatus, StatusSources } from './status.ts';
 export declare const name = "dsh-plugin-copilot";
 export declare const inject: string[];
-export declare function apply(ctx: Context, config: CopilotConfig): void;
+/**
+ * The plugin's own settings namespace: the card owns no configurable fields,
+ * but the flow's enterprise question is answered from here.
+ */
+export declare const CARD_NAMESPACE: SettingsNamespace;
+/** Plugin config. */
+export interface Config {
+    /**
+     * GitHub Enterprise domain (e.g. `company.ghe.com`) the gateway answers the
+     * Copilot flow's enterprise question with; blank serves github.com, which
+     * is why the question never reaches the card by default.
+     */
+    enterpriseDomain: string;
+}
+export declare const Config: z<Config>;
+/**
+ * Plugin body: register the card namespace, the HTTP gateway, and the
+ * status tool. Every host read goes through optional services (`ctx.get`)
+ * so a composition without the authorization or credentials seam still
+ * boots — the card then reports the missing pieces instead of failing load.
+ * @param ctx - host plugin context.
+ */
+export declare function apply(ctx: Context, config?: Config): void;

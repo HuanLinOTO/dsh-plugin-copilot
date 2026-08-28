@@ -16,13 +16,11 @@ export const name = 'dsh-plugin-copilot-invariant'
 export const inject = ['invariants']
 
 /**
- * No runtime invariant: the adapter route and the four tools are cordis
- * effect registrations auto-disposed with the plugin fiber (the llm registry
- * unwinds routes on dispose — proven by `LlmRuntime`'s own tests), and the
- * settings namespace registration rides the scoped settings child that
- * `installSettingsSection` creates. The pending device-flow login slot is
- * intentionally non-durable: a half-finished login holds no authority, so
- * dropping it on unload is the correct cleanup, not lost state.
+ * No runtime invariant: the gateway route, the settings-namespace
+ * registration, and the `copilot_status` tool registration are cordis
+ * effect contributions auto-disposed with the plugin fiber. The gateway's
+ * in-flight login slot is intentionally non-durable — a dropped page just
+ * re-polls, and a half-finished device flow holds no authority.
  */
 const install: InvariantInstaller = () => {}
 

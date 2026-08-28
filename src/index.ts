@@ -1,154 +1,172 @@
 /**
- * Register the {@link CopilotAdapter} for the `github-copilot` provider route
- * on `ctx.llm`, with connection facts resolved per request instead of frozen
- * at load: the plugin layers its `cordis.yml` entry config under the optional
- * `dsh-plugin-copilot` user-settings section (`ctx.settings`) and resolves the
- * GitHub bearer per request (the device-flow auth store first, then the
- * `GITHUB_COPILOT_TOKEN`-style credential ref), so a changed enterprise
- * domain, API version, or token reaches the very next request without
- * restarting anything, while an in-flight stream keeps the facts it started
- * with. The one registration-captured fact — the retry policy — re-registers
- * the route in place when it changes.
+ * `@huanlin/dsh-plugin-copilot` — Copilot onboarding layer.
  *
- * Behavior parity target: opencode's GitHub Copilot provider (OAuth device
- * flow, pinned `X-GitHub-Api-Version`, endpoint routing across the chat
- * completions / responses / messages shims, picker + utility model split).
+ * This plugin no longer registers a `github-copilot` provider or adapter:
+ * dsh 0.1.2-alpha.1's `dsh-llm-pi-ai` ships the pi-ai builtin catalog whose
+ * Copilot provider already does everything the 0.1.x adapter did (OAuth
+ * device-flow login, request headers, model catalog, three wire protocols),
+ * and declaring the same provider twice fails the whole profile boot with
+ * `DUPLICATE_DIRECTORY`. What the harness lacks is a way to *reach* that
+ * built-in login from the WebUI — that is this plugin's whole job now:
+ *
+ *   - host half (this module): a `/copilot/api` HTTP gateway that proxies
+ *     `ctx.authorization.begin()` onto the pi-ai Copilot flow, an idempotent
+ *     settings autofill that writes `llm-pi-ai.providers.github-copilot = {}`
+ *     (flipping the route from dormant to active), and a read-only
+ *     `copilot_status` tool;
+ *   - browser half (`src/client/`): a `settings.plugin.item` card in the
+ *     Plugins settings page rendering the device-flow panel.
  *
  * @module @huanlin/dsh-plugin-copilot
  */
 
 import type { Context } from '@deepseek-ai/cordis'
-import { assertUsableApiKey, LlmError } from '@deepseek-ai/dsh-llm'
-import { deepEqualJson, installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
-import { launchEnvironmentOf } from '@deepseek-ai/dsh-launch-environment'
-import { loadStoredAuth, AuthStoreError } from './auth-store.ts'
-import type { StoredCopilotAuth } from './auth-store.ts'
-import { CopilotAdapter } from './adapter.ts'
-import type { ResolvedCopilotAuth } from './adapter.ts'
-import { Config, resolveConnection, copilotBaseUrl, normalizeEnterpriseDomain } from './config.ts'
-import type { CopilotConfig, CopilotConnection } from './config.ts'
+import { settingsNamespace, type SettingsNamespace } from '@deepseek-ai/dsh-settings'
+import z from 'schemastery'
+import { registerCopilotGateway } from './gateway.ts'
 import { registerCopilotTools } from './tools.ts'
+import { COPILOT_PROVIDER, COPILOT_RECORD_KEY, COPILOT_SETTINGS_NS, grantModelIds, joinStatus } from './status.ts'
+import type { StatusSources } from './status.ts'
 
+export { registerCopilotGateway } from './gateway.ts'
+export { registerCopilotTools } from './tools.ts'
 export {
-  CopilotAdapter,
-  Config,
-  resolveConnection,
-  copilotBaseUrl,
-  normalizeEnterpriseDomain,
-  registerCopilotTools,
-}
-export type { ResolvedCopilotAuth, CopilotConfig, CopilotConnection }
-export { AuthStoreError, loadStoredAuth, saveStoredAuth, clearStoredAuth } from './auth-store.ts'
-export { startDeviceFlow, pollDeviceFlow } from './device-flow.ts'
-export { STATIC_FALLBACK_MODELS, UTILITY_MODELS, endpointOf, prefersResponsesApi } from './copilot-models.ts'
+  COPILOT_PROVIDER, COPILOT_RECORD_KEY, COPILOT_SCOPE, COPILOT_SETTINGS_NS,
+  findCopilotFlow, grantModelIds, joinStatus, recordAddress,
+} from './status.ts'
+export type { CopilotStatus, StatusSources } from './status.ts'
 
 export const name = 'dsh-plugin-copilot'
-export const inject = ['llm', 'tools']
+export const inject = ['tools', 'webServer']
 
-const NS = settingsNamespace('dsh-plugin-copilot')
-/** The single provider route this plugin owns. */
-const PROVIDER = 'github-copilot'
+/**
+ * The plugin's own settings namespace: the card owns no configurable fields,
+ * but the flow's enterprise question is answered from here.
+ */
+export const CARD_NAMESPACE = settingsNamespace('dsh-plugin-copilot')
 
-export function apply(ctx: Context, config: CopilotConfig): void {
-  let current: () => CopilotConfig = () => config
-  let lastRaw: CopilotConfig | undefined
-  let lastGood: CopilotConnection | undefined
-  const options = (): CopilotConnection => {
-    const raw = current()
-    if (raw === lastRaw && lastGood !== undefined) return lastGood
+/** Plugin config. */
+export interface Config {
+  /**
+   * GitHub Enterprise domain (e.g. `company.ghe.com`) the gateway answers the
+   * Copilot flow's enterprise question with; blank serves github.com, which
+   * is why the question never reaches the card by default.
+   */
+  enterpriseDomain: string
+}
+
+export const Config: z<Config> = z.object({
+  enterpriseDomain: z.string().default('')
+    .description('GitHub Enterprise domain (e.g. company.ghe.com); blank serves github.com'),
+})
+
+/** The pi-ai settings namespace as a branded settings-namespace value. */
+const PI_AI_NS = COPILOT_SETTINGS_NS as SettingsNamespace
+
+/**
+ * Plugin body: register the card namespace, the HTTP gateway, and the
+ * status tool. Every host read goes through optional services (`ctx.get`)
+ * so a composition without the authorization or credentials seam still
+ * boots — the card then reports the missing pieces instead of failing load.
+ * @param ctx - host plugin context.
+ */
+export function apply(ctx: Context, config: Config = { enterpriseDomain: '' }): void {
+  // The namespace registration is disposable with this fiber; a settings
+  // provider absence leaves the card hidden rather than breaking the plugin.
+  ctx.inject(['settings'], (sctx) => {
     try {
-      const next = resolveConnection(raw)
-      lastRaw = raw
-      lastGood = next
-      return next
+      sctx.settings.register(CARD_NAMESPACE, Config)
     } catch (error) {
-      // Static composition resolves before anything registers, so this branch
-      // only sees a live settings snapshot failing a beyond-schema bound:
-      // keep serving the last good facts and say so once per bad snapshot.
-      if (lastGood === undefined) throw error
-      lastRaw = raw
-      ctx.logger.error('dsh-plugin-copilot: keeping the last good configuration after an invalid settings section')
-      ctx.logger.error(error)
-      return lastGood
+      // A second fiber registering the same namespace (HMR) is the one
+      // known duplicate; anything else is a real fault.
+      if (!(error instanceof Error) || !error.message.includes('already registered')) throw error
     }
-  }
-  options()
-
-  const resolveAuth = async (connection: CopilotConnection): Promise<ResolvedCopilotAuth> => {
-    // 1) The device-flow store is the login product: it wins, and its
-    // enterprise domain travels with the token (opencode parity — a login
-    // pins the deployment it was granted on).
-    let stored: StoredCopilotAuth | undefined
-    try {
-      stored = await loadStoredAuth(connection.authFile)
-    } catch (error) {
-      throw new LlmError(
-        `dsh-plugin-copilot: ${error instanceof AuthStoreError ? error.message : 'auth store is unreadable'}`
-        + ` (${connection.authFile})`,
-        'INVALID_CREDENTIAL',
-        { cause: error },
-      )
-    }
-    if (stored !== undefined) {
-      return {
-        token: assertUsableApiKey(stored.githubToken, name, 'device-flow'),
-        ...stored.enterpriseDomain === undefined ? {} : { enterpriseDomain: stored.enterpriseDomain },
-        source: 'device-flow',
-      }
-    }
-    // 2) Credential-ref fallback for headless deployments, resolved per
-    // request through the credential seam, then the trusted launch environment.
-    const ref = connection.githubTokenEnv
-    const credentials = ctx.get('credentials')
-    if (credentials !== undefined) {
-      const hit = await credentials.resolve(ref)
-      if (hit !== undefined) {
-        return { token: assertUsableApiKey(hit.value, name, ref), source: 'credential' }
-      }
-    } else {
-      // Without the seam there is no managed store to rank against, so the
-      // launch environment is the whole credential plane.
-      const ambient = launchEnvironmentOf(ctx).get(ref)
-      if (ambient !== undefined && ambient.value.length > 0) {
-        return { token: assertUsableApiKey(ambient.value, name, ref), source: 'credential' }
-      }
-    }
-    throw new LlmError(
-      `dsh-plugin-copilot: no GitHub token for provider route "${PROVIDER}"; ask the model to run the`
-      + ` copilot_login tool, or export ${ref} in the launching environment`,
-      'MISSING_CREDENTIAL',
-    )
-  }
-
-  const adapter = new CopilotAdapter({
-    options,
-    resolveAuth,
-    resolveAttachments: () => ctx.get('attachments'),
   })
-  ctx.llm.registerConfigurableProviders([
-    { provider: PROVIDER, displayName: 'GitHub Copilot', settingsNs: NS, settingsPath: [] },
-  ])
-  // Route effects bind to this apply fiber via the stable `ctx` reference,
-  // even when a swap runs inside the scoped settings callback below.
-  const registration = ctx.llm.registerAdapter([PROVIDER], adapter)
-  let registeredPolicy = options().retryPolicy
-  const ensureRegistrationFacts = (): void => {
-    const policy = options().retryPolicy
-    if (deepEqualJson(policy, registeredPolicy)) return
-    // The registry captures the retry policy at registration, so it is the one
-    // fact per-request resolution cannot refresh. `replace` re-reads it in one
-    // synchronous registry section: disposing and re-registering instead would
-    // publish an empty route set between the two.
-    registration.replace([PROVIDER])
-    registeredPolicy = policy
+
+  const authorization = () => ctx.get('authorization')
+  const credentials = () => ctx.get('credentials')
+
+  // `settings.get` answers the resolved value of a registered namespace; the
+  // pi-ai section is registered by dsh-llm-pi-ai, so read it defensively.
+  const piAiSection = (): Record<string, unknown> | undefined => {
+    const settings = ctx.get('settings')
+    if (settings === undefined) return undefined
+    const raw = settings.get(PI_AI_NS) as unknown
+    return typeof raw === 'object' && raw !== null ? raw as Record<string, unknown> : undefined
   }
 
-  installSettingsSection(ctx, NS, Config, config, {
-    setSource: (source) => {
-      current = source
+  const sources: StatusSources = {
+    listFlows: () => authorization()?.list() ?? [],
+    describeRecord: async key => credentials()?.describeRecord(key),
+    settingsSection: piAiSection,
+    models: async () => grantModelIds(await credentials()?.readRecord(COPILOT_RECORD_KEY)),
+  }
+
+  /**
+   * Minimal structural face of the `llm` service this plugin reads; the full
+   * type is deliberately not a dependency for one call.
+   */
+  interface LlmDiscoveryFace {
+    discoverModels(
+      settingsNs: string,
+      request: { provider?: string },
+      signal?: AbortSignal,
+    ): Promise<readonly { id: string }[]>
+  }
+
+  /**
+   * The installed pi-ai catalog for the Copilot route, through the llm
+   * service's public discovery — a catalog route answers from the registry
+   * with no network call. `undefined` (and a swallowed failure, which would
+   * only degrade the models narrowing to the untouched catalog) keeps a
+   * composition without the llm seam booting.
+   */
+  const catalogModels = async (): Promise<readonly { id: string }[] | undefined> => {
+    // ctx.get (not a property read): the llm service is a sibling fiber's
+    // contribution, and the property proxy resolves along the fiber chain,
+    // throwing on an undeclared inject instead of consulting the global store.
+    const llm = ctx.get('llm') as LlmDiscoveryFace | undefined
+    if (llm === undefined) return undefined
+    try {
+      return await llm.discoverModels(COPILOT_SETTINGS_NS, { provider: COPILOT_PROVIDER })
+    } catch {
+      // Discovery is a catalog read for a shipped provider; a throw means the
+      // llm seam refused the request shape, and the autofill then writes the
+      // minimal profile rather than a narrowed models list.
+      return undefined
+    }
+  }
+
+  ctx.effect(() => registerCopilotGateway(ctx, {
+    enterpriseDomain: config.enterpriseDomain,
+    listFlows: sources.listFlows,
+    models: sources.models,
+    catalogModels,
+    begin: request => {
+      const seam = authorization()
+      if (seam === undefined) {
+        throw new Error('the authorization service is not mounted in this composition')
+      }
+      return seam.begin(request)
     },
-    onChange: ensureRegistrationFacts,
-  })
+    cancel: key => { authorization()?.cancel(key) },
+    describeRecord: sources.describeRecord,
+    deleteRecord: key => {
+      const seam = credentials()
+      if (seam === undefined) {
+        throw new Error('the credentials service is not mounted in this composition')
+      }
+      return seam.deleteRecord(key)
+    },
+    settingsSection: piAiSection,
+    updateSettings: async patch => {
+      const settings = ctx.get('settings')
+      if (settings === undefined) {
+        throw new Error('the settings service is not mounted; the provider profile cannot be activated')
+      }
+      await settings.update(PI_AI_NS, patch as object)
+    },
+  }), 'dsh-plugin-copilot: /copilot/api gateway')
 
-  registerCopilotTools(ctx, { options, resolveAuth })
+  registerCopilotTools(ctx, sources)
 }

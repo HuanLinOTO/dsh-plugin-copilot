@@ -20,7 +20,7 @@
  * @module @huanlin/dsh-plugin-copilot
  */
 import type { Context } from '@deepseek-ai/cordis';
-import { type SettingsNamespace } from '@deepseek-ai/dsh-settings';
+import type { SettingsNamespace } from '@deepseek-ai/dsh-settings';
 import z from 'schemastery';
 export { registerCopilotGateway } from './gateway.ts';
 export { registerCopilotTools } from './tools.ts';

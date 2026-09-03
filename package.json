@@ -17,10 +17,6 @@
       "types": "./lib/types/index.d.ts",
       "import": "./lib/index.js"
     },
-    "./invariant": {
-      "types": "./lib/types/invariant.d.ts",
-      "import": "./lib/invariant.js"
-    },
     "./client": {
       "types": "./lib/types/client/index.d.ts",
       "default": "./lib/client.js"
@@ -55,16 +51,15 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-authorization": "^0.1.2-alpha.1",
-    "@deepseek-ai/dsh-client-locale": "^0.1.2-alpha.1",
-    "@deepseek-ai/dsh-client-store": "^0.1.2-alpha.1",
-    "@deepseek-ai/dsh-client-ui-renderer": "^0.1.2-alpha.1",
-    "@deepseek-ai/dsh-client-ui-settings-plugins": "^0.1.2-alpha.1",
-    "@deepseek-ai/dsh-client-ui-slots": "^0.1.2-alpha.1",
-    "@deepseek-ai/dsh-credentials": "^0.1.2-alpha.1",
-    "@deepseek-ai/dsh-invariants": "^0.1.2-alpha.1",
-    "@deepseek-ai/dsh-settings": "^0.1.2-alpha.1",
-    "@deepseek-ai/dsh-tools": "^0.1.2-alpha.1",
+    "@deepseek-ai/dsh-authorization": "^0.1.2-rc.1",
+    "@deepseek-ai/dsh-client-locale": "^0.1.2-rc.1",
+    "@deepseek-ai/dsh-client-store": "^0.1.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-renderer": "^0.1.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-settings-plugins": "^0.1.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-slots": "^0.1.2-rc.1",
+    "@deepseek-ai/dsh-credentials": "^0.1.2-rc.1",
+    "@deepseek-ai/dsh-settings": "^0.1.2-rc.1",
+    "@deepseek-ai/dsh-tools": "^0.1.2-rc.1",
     "react": "^18.2.0",
     "schemastery": "^3.18.0"
   },
@@ -91,9 +86,6 @@
       "optional": true
     },
     "@deepseek-ai/dsh-credentials": {
-      "optional": true
-    },
-    "@deepseek-ai/dsh-invariants": {
       "optional": true
     },
     "@deepseek-ai/dsh-settings": {

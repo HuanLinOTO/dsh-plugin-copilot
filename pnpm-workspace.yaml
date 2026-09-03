@@ -4,7 +4,6 @@ overrides:
   '@deepseek-ai/cordis': link:C:/Users/Administrator/.dsh/source/current/vendor/cordis
   '@deepseek-ai/dsh-authorization': link:C:/Users/Administrator/.dsh/source/current/packages/credentials/authorization
   '@deepseek-ai/dsh-credentials': link:C:/Users/Administrator/.dsh/source/current/packages/credentials/credentials
-  '@deepseek-ai/dsh-invariants': link:C:/Users/Administrator/.dsh/source/current/packages/runtime-diagnostics/invariants
   '@deepseek-ai/dsh-llm': link:C:/Users/Administrator/.dsh/source/current/packages/llm/llm
   '@deepseek-ai/dsh-settings': link:C:/Users/Administrator/.dsh/source/current/packages/settings/settings
   '@deepseek-ai/dsh-tools': link:C:/Users/Administrator/.dsh/source/current/packages/core/tools

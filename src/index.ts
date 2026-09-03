@@ -21,7 +21,7 @@
  */
 
 import type { Context } from '@deepseek-ai/cordis'
-import { settingsNamespace, type SettingsNamespace } from '@deepseek-ai/dsh-settings'
+import type { SettingsNamespace } from '@deepseek-ai/dsh-settings'
 import z from 'schemastery'
 import { registerCopilotGateway } from './gateway.ts'
 import { registerCopilotTools } from './tools.ts'
@@ -43,7 +43,7 @@ export const inject = ['tools', 'webServer']
  * The plugin's own settings namespace: the card owns no configurable fields,
  * but the flow's enterprise question is answered from here.
  */
-export const CARD_NAMESPACE = settingsNamespace('dsh-plugin-copilot')
+export const CARD_NAMESPACE = 'dsh-plugin-copilot' as SettingsNamespace
 
 /** Plugin config. */
 export interface Config {

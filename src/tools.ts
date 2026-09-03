@@ -7,10 +7,16 @@
  */
 
 import { defineTool } from '@deepseek-ai/dsh-tools'
-import type { JsonValue } from '@deepseek-ai/dsh-tools'
 import type { Context } from '@deepseek-ai/cordis'
 import { joinStatus, COPILOT_SETTINGS_NS } from './status.ts'
 import type { StatusSources } from './status.ts'
+
+/**
+ * Local structural equivalent of the `JsonValue` type from
+ * `@deepseek-ai/dsh-util-values` (dsh 0.1.2-alpha.2 stopped re-exporting it
+ * from `@deepseek-ai/dsh-tools`).
+ */
+type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue }
 
 /** Loose canonical-JSON output declaration. */
 const JSON_OUTPUT = {

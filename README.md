@@ -68,10 +68,10 @@ Host gateway (src/gateway.ts, ctx.webServer)
 pnpm install
 pnpm run typecheck   # tsc --noEmit（类型经 ~/.dsh/source/current 解析）
 pnpm test            # vitest run（48 个用例：status join / gateway / 控制器 / 卡片渲染）
-pnpm run build       # tsdown（lib/index.js + lib/invariant.js + lib/client.js）+ tsc 声明
+pnpm run build       # tsdown（lib/index.js + lib/client.js）+ tsc 声明
 ```
 
-目录：`src/index.ts`（host 入口：命名空间注册 + gateway + 工具）· `src/status.ts`（状态 join 与 flow 探查）· `src/gateway.ts`（/copilot/api 路由与登录状态机）· `src/tools.ts`（copilot_status 工具）· `src/invariant.ts`（不变量伴生）· `src/client/`（浏览器半：卡片 + 控制器 + 词典）。
+目录：`src/index.ts`（host 入口：命名空间注册 + gateway + 工具）· `src/status.ts`（状态 join 与 flow 探查）· `src/gateway.ts`（/copilot/api 路由与登录状态机）· `src/tools.ts`（copilot_status 工具）· `src/client/`（浏览器半：卡片 + 控制器 + 词典）。
 
 设计依据见 `docs/plans/2026-08-28-webui-copilot-auth-design.md`。
 

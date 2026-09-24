@@ -2,8 +2,10 @@
  * CopilotAuthCard — the `plugins.row.config` slot occupant (key
  * `@huanlin/dsh-plugin-copilot#dsh-plugin-copilot`).
  *
- * The plugin's configuration page on the Plugins page, rendering the
- * onboarding state machine:
+ * Since 0.1.7 the slot renders on the plugin's exclusive row-detail page,
+ * which draws its own title, icon, and breadcrumb; this card is the page's
+ * only content and renders the onboarding state machine flat — nothing
+ * collapses:
  * unsupported (no pi-ai flow) / logged-out / pending (device code + polling
  * + cancel + prompts) / success / error, plus logged-in actions (sign out,
  * activate-route autofill when the profile is missing).
@@ -35,41 +37,10 @@ const cardStyle: CSSProperties = {
   listStyle: 'none',
 }
 
-const headerStyle: CSSProperties = {
-  width: '100%',
-  font: 'inherit',
-  color: 'inherit',
-  textAlign: 'left',
-  cursor: 'pointer',
-  background: 'transparent',
-  border: 0,
-  borderRadius: 12,
-  alignItems: 'center',
-  gap: 12,
-  padding: '14px 16px',
+const badgeRowStyle: CSSProperties = {
   display: 'flex',
-  boxSizing: 'border-box',
-}
-
-const headTextStyle: CSSProperties = {
-  flexDirection: 'column',
-  flex: 1,
-  gap: 4,
-  minWidth: 0,
-  display: 'flex',
-}
-
-const titleStyle: CSSProperties = {
-  color: 'var(--dsw-alias-label-primary, inherit)',
-  fontSize: 15,
-  fontWeight: 600,
-  lineHeight: 1.4,
-}
-
-const descStyle: CSSProperties = {
-  color: 'var(--dsw-alias-label-tertiary, rgba(128,128,128,0.7))',
-  fontSize: 13,
-  lineHeight: 1.5,
+  gap: 8,
+  flexWrap: 'wrap',
 }
 
 const badgeStyle = (tone: 'ok' | 'warn'): CSSProperties => ({
@@ -89,9 +60,7 @@ const badgeStyle = (tone: 'ok' | 'warn'): CSSProperties => ({
 })
 
 const bodyStyle: CSSProperties = {
-  borderTop: '1px solid var(--dsw-alias-border-l2, rgba(128,128,128,0.22))',
-  margin: '0 16px',
-  padding: '12px 0 4px',
+  padding: '14px 16px 4px',
   display: 'flex',
   flexDirection: 'column',
   gap: 12,
@@ -180,8 +149,6 @@ const modelsStyle: CSSProperties = {
   overflowWrap: 'anywhere',
 }
 
-const CHEVRON_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>'
-
 /**
  * Render the Copilot onboarding card.
  * @param props - locale + controller inject.
@@ -189,7 +156,6 @@ const CHEVRON_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"
  */
 export function CopilotAuthCard({ view, t, controller, useCard }: CopilotCardProps) {
   const state = useCard(snapshot => snapshot)
-  const [open, setOpen] = useState(false)
   const [promptAnswer, setPromptAnswer] = useState('')
   if (!state.loaded) void controller.load()
 
@@ -198,49 +164,31 @@ export function CopilotAuthCard({ view, t, controller, useCard }: CopilotCardPro
   if (view === 'summary') return t('card.intro')
 
   const unsupported = state.loaded && !state.status.flowAvailable
-  // A login lifecycle in flight or freshly settled keeps the card open: the
-  // device code and its outcome must never hide behind a collapsed header.
-  const loginRevealed = state.login.kind !== 'idle'
-  const expanded = open || unsupported || loginRevealed
   const busy = state.busy
 
-  const header = (
-    <button
-      type="button"
-      style={headerStyle}
-      aria-expanded={expanded}
-      aria-label={t('card.title')}
-      onClick={() => { setOpen(!open) }}
-    >
-      <span style={headTextStyle}>
-        <span style={titleStyle}>{t('card.title')}</span>
-        <span style={descStyle}>{t('card.intro')}</span>
-      </span>
-      {state.status.loggedIn
-        ? <span style={badgeStyle('ok')}>{t('card.signedIn')}</span>
-        : state.loaded && state.status.flowAvailable
-          ? <span style={badgeStyle('warn')}>{t('card.signedOut')}</span>
-          : null}
-      {state.status.loggedIn
-        ? <span style={badgeStyle(state.status.profileActivated ? 'ok' : 'warn')}>
-            {t(state.status.profileActivated ? 'card.routeActive' : 'card.routeDormant')}
-          </span>
-        : null}
-      <span
-        style={{ color: 'var(--dsw-alias-label-tertiary, inherit)', flex: 'none', display: 'inline-flex', transform: expanded ? 'rotate(180deg)' : 'none' }}
-        dangerouslySetInnerHTML={{ __html: CHEVRON_SVG }}
-      />
-    </button>
-  )
-
-  if (!expanded) {
-    return <li style={cardStyle}>{header}</li>
-  }
+  // Login/route status badges the exclusive page itself does not draw.
+  const badges: ReadonlyArray<{ tone: 'ok' | 'warn'; label: string }> = state.status.loggedIn
+    ? [
+        { tone: 'ok', label: t('card.signedIn') },
+        {
+          tone: state.status.profileActivated ? 'ok' : 'warn',
+          label: t(state.status.profileActivated ? 'card.routeActive' : 'card.routeDormant'),
+        },
+      ]
+    : state.loaded && state.status.flowAvailable
+      ? [{ tone: 'warn', label: t('card.signedOut') }]
+      : []
 
   return (
     <li style={cardStyle}>
-      {header}
       <div style={bodyStyle}>
+        {badges.length > 0 ? (
+          <div style={badgeRowStyle}>
+            {badges.map(badge => (
+              <span key={badge.label} style={badgeStyle(badge.tone)}>{badge.label}</span>
+            ))}
+          </div>
+        ) : null}
         {unsupported ? <p style={noticeStyle} role="status">{t('card.unsupported')}</p> : null}
 
         {!unsupported && state.login.kind === 'idle' ? (

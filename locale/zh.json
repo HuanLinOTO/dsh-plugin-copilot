@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "GitHub Copilot",
+    "description": "Copilot 引导层：在 WebUI 设置页卡片一键发起 GitHub 授权（复用 dsh-llm-pi-ai 内置 device-flow），并自动写入 provider profile 激活模型路由。"
+  }
+}

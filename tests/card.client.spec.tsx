@@ -64,20 +64,10 @@ afterEach(async () => {
   document.body.innerHTML = ''
 })
 
-/** Click the card header to expand the collapsed card. */
-function open(host: HTMLElement): void {
-  const header = host.querySelector('button[aria-expanded="false"]')
-  if (header === null) throw new Error('collapsed header not found')
-  act(() => {
-    header.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
-  })
-}
-
 describe('CopilotAuthCard', () => {
   it('renders the signed-out state with a sign-in button', () => {
     const host = renderState(stateWith({}))
     expect(host.textContent).toContain('Not signed in')
-    open(host)
     const signIn = [...host.querySelectorAll('button')].find(button => button.textContent === 'Sign in with GitHub')
     expect(signIn).toBeDefined()
   })
@@ -119,7 +109,6 @@ describe('CopilotAuthCard', () => {
     }))
     expect(host.textContent).toContain('Signed in')
     expect(host.textContent).toContain('Route active')
-    open(host)
     const signOut = [...host.querySelectorAll('button')].find(button => button.textContent === 'Sign out')
     expect(signOut).toBeDefined()
     const syncModels = [...host.querySelectorAll('button')].find(button => button.textContent === 'Sync model list')
@@ -133,7 +122,6 @@ describe('CopilotAuthCard', () => {
         models: ['gpt-4.1', 'claude-sonnet-4.5'],
       },
     }))
-    open(host)
     expect(host.textContent).toContain('Models available to this account')
     expect(host.textContent).toContain('gpt-4.1, claude-sonnet-4.5')
   })
@@ -142,7 +130,6 @@ describe('CopilotAuthCard', () => {
     const host = renderState(stateWith({
       status: { flowAvailable: true, loggedIn: true, profileActivated: false, inFlight: false, models: undefined },
     }))
-    open(host)
     const activate = [...host.querySelectorAll('button')].find(button => button.textContent === 'Activate route')
     expect(activate).toBeDefined()
   })

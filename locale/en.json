@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "GitHub Copilot",
+    "description": "Copilot onboarding: one-click GitHub sign-in from the WebUI settings card (reusing dsh-llm-pi-ai's builtin device flow), plus automatic provider-profile autofill that activates the model route."
+  }
+}

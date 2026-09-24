@@ -6,7 +6,6 @@
 
 /** The locale keys the Copilot card reads. */
 export type CopilotKey =
-  | 'card.title'
   | 'card.intro'
   | 'card.unsupported'
   | 'card.signedIn'
@@ -40,7 +39,6 @@ export const NS = 'dsh-plugin-copilot'
 
 /** English dictionary. */
 export const en: Record<CopilotKey, string> = {
-  'card.title': 'GitHub Copilot',
   'card.intro': 'Sign in to GitHub Copilot and activate its model route (served by dsh-llm-pi-ai).',
   'card.unsupported': 'Copilot sign-in needs dsh-llm-pi-ai (0.1.2-alpha.1 or later) with the github-copilot catalog provider.',
   'card.signedIn': 'Signed in',
@@ -72,7 +70,6 @@ export const en: Record<CopilotKey, string> = {
 
 /** Chinese dictionary. */
 export const zh: Record<CopilotKey, string> = {
-  'card.title': 'GitHub Copilot',
   'card.intro': '登录 GitHub Copilot 并激活其模型路由（由 dsh-llm-pi-ai 提供）。',
   'card.unsupported': 'Copilot 登录需要 dsh-llm-pi-ai（0.1.2-alpha.1 或更高）内置的 github-copilot 供应商。',
   'card.signedIn': '已登录',

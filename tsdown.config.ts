@@ -20,7 +20,7 @@ const ID = '@huanlin/dsh-plugin-copilot'
 /** DSH platform modules that stay external in the host bundles (peer deps). */
 const HOST_EXTERNALS = [
   '@deepseek-ai/cordis',
-  'schemastery',
+  '@deepseek-ai/schemastery',
   '@deepseek-ai/dsh-authorization',
   '@deepseek-ai/dsh-credentials',
   '@deepseek-ai/dsh-settings',

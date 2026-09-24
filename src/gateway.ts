@@ -103,9 +103,10 @@ export interface GatewayDeps {
   updateSettings(patch: Record<string, unknown>): Promise<void>
   /**
    * The configured GitHub Enterprise domain, auto-answered for the Copilot
-   * flow's enterprise question; blank or undefined serves github.com.
+   * flow's enterprise question; blank or undefined serves github.com. A thunk
+   * reads the live volatile config so a profile edit reaches the next sign-in.
    */
-  enterpriseDomain?: string
+  enterpriseDomain?: string | (() => string)
 }
 
 /** Minimal structural types for the host webServer service. */
@@ -210,7 +211,8 @@ export function registerCopilotGateway(ctx: Context, deps: GatewayDeps): () => v
           // announces itself; blank needs no announcement — the device-code
           // notice lands within a moment either way.
           if (isEnterpriseDomainPrompt(prompt)) {
-            const domain = (deps.enterpriseDomain ?? '').trim()
+            const configured = typeof deps.enterpriseDomain === 'function' ? deps.enterpriseDomain() : deps.enterpriseDomain
+            const domain = (configured ?? '').trim()
             if (domain !== '') pushNotice({ message: `Using GitHub Enterprise domain ${domain}.` })
             return Promise.resolve(domain)
           }

@@ -14,15 +14,17 @@
  *     settings autofill that writes `llm-pi-ai.providers.github-copilot = {}`
  *     (flipping the route from dormant to active), and a read-only
  *     `copilot_status` tool;
- *   - browser half (`src/client/`): a `settings.plugin.item` card in the
- *     Plugins settings page rendering the device-flow panel.
+ *   - browser half (`src/client/`): a row-config card on the
+ *     Plugins page rendering the device-flow panel.
  *
  * @module @huanlin/dsh-plugin-copilot
  */
 
 import type { Context } from '@deepseek-ai/cordis'
+import type { Volatile } from '@deepseek-ai/cordis'
 import type { SettingsNamespace } from '@deepseek-ai/dsh-settings'
-import z from 'schemastery'
+import type {} from '@deepseek-ai/dsh-settings'
+import z from '@deepseek-ai/schemastery'
 import { registerCopilotGateway } from './gateway.ts'
 import { registerCopilotTools } from './tools.ts'
 import { COPILOT_PROVIDER, COPILOT_RECORD_KEY, COPILOT_SETTINGS_NS, grantModelIds, joinStatus } from './status.ts'
@@ -50,15 +52,17 @@ export interface Config {
   /**
    * GitHub Enterprise domain (e.g. `company.ghe.com`) the gateway answers the
    * Copilot flow's enterprise question with; blank serves github.com, which
-   * is why the question never reaches the card by default.
+   * is why the question never reaches the card by default. Volatile so a
+   * profile-form edit reaches the next sign-in without a remount.
    */
-  enterpriseDomain: string
+  enterpriseDomain: Volatile<string>
 }
 
 export const Config: z<Config> = z.object({
   enterpriseDomain: z.string().default('')
-    .description('GitHub Enterprise domain (e.g. company.ghe.com); blank serves github.com'),
-})
+    .description('GitHub Enterprise domain (e.g. company.ghe.com); blank serves github.com')
+    .volatile(),
+}) as unknown as z<Config>
 
 /** The pi-ai settings namespace as a branded settings-namespace value. */
 const PI_AI_NS = COPILOT_SETTINGS_NS as SettingsNamespace
@@ -70,28 +74,26 @@ const PI_AI_NS = COPILOT_SETTINGS_NS as SettingsNamespace
  * boots — the card then reports the missing pieces instead of failing load.
  * @param ctx - host plugin context.
  */
-export function apply(ctx: Context, config: Config = { enterpriseDomain: '' }): void {
-  // The namespace registration is disposable with this fiber; a settings
-  // provider absence leaves the card hidden rather than breaking the plugin.
-  ctx.inject(['settings'], (sctx) => {
-    try {
-      sctx.settings.register(CARD_NAMESPACE, Config)
-    } catch (error) {
-      // A second fiber registering the same namespace (HMR) is the one
-      // known duplicate; anything else is a real fault.
-      if (!(error instanceof Error) || !error.message.includes('already registered')) throw error
-    }
+export function apply(ctx: Context, config: Config = {} as Config): void {
+  // rc.1: the namespace-registration API is gone. The plugin declares its
+  // editable fields as volatile Cordis config (above) and only records its
+  // page policy
+  // (`auto: false` — the plugin ships its own card); values persist in the
+  // active profile's `cordis.patch.yml` under this entry's id.
+  ctx.inject(['settings'], (child) => {
+    child.effect(() => child.settings.configure({ auto: false }, ctx.fiber))
   })
 
   const authorization = () => ctx.get('authorization')
   const credentials = () => ctx.get('credentials')
 
-  // `settings.get` answers the resolved value of a registered namespace; the
-  // pi-ai section is registered by dsh-llm-pi-ai, so read it defensively.
+  // The entry's resolved `llm-pi-ai` section, read from the settings service's
+  // describe projection (the pi-ai section is owned by dsh-llm-pi-ai, so read
+  // it defensively).
   const piAiSection = (): Record<string, unknown> | undefined => {
     const settings = ctx.get('settings')
     if (settings === undefined) return undefined
-    const raw = settings.get(PI_AI_NS) as unknown
+    const raw = settings.describe().find(row => row.ns === PI_AI_NS)?.value as unknown
     return typeof raw === 'object' && raw !== null ? raw as Record<string, unknown> : undefined
   }
 
@@ -138,7 +140,7 @@ export function apply(ctx: Context, config: Config = { enterpriseDomain: '' }): 
   }
 
   ctx.effect(() => registerCopilotGateway(ctx, {
-    enterpriseDomain: config.enterpriseDomain,
+    enterpriseDomain: () => config.enterpriseDomain.get(),
     listFlows: sources.listFlows,
     models: sources.models,
     catalogModels,

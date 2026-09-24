@@ -1,10 +1,10 @@
 /**
  * dsh-plugin-copilot — browser half.
  *
- * One registration: a `settings.plugin.item` card (key `dsh-plugin-copilot`)
- * in the Plugins settings page, rendering the Copilot onboarding state
- * machine (sign-in device-flow panel, route activation, sign-out) through
- * the host's `/copilot/api` gateway.
+ * One registration: a `plugins.row.config` card (key
+ * `@huanlin/dsh-plugin-copilot#dsh-plugin-copilot`) on the Plugins page,
+ * rendering the Copilot onboarding state machine (sign-in device-flow panel,
+ * route activation, sign-out) through the host's `/copilot/api` gateway.
  *
  * @module @huanlin/dsh-plugin-copilot/client
  */
@@ -12,7 +12,7 @@ import type { Context as ClientContext } from '@deepseek-ai/cordis'
 // Type-only: pulls the client Context merges (ctx.slots, ctx.locale).
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
-import type {} from '@deepseek-ai/dsh-client-ui-settings-plugins/client'
+import type {} from '@deepseek-ai/dsh-client-ui-plugin-manager/client'
 import { CopilotAuthCard } from './CopilotAuthCard.tsx'
 import type { CopilotCardInjected } from './CopilotAuthCard.tsx'
 import { CopilotAuthController } from './controller.ts'
@@ -41,11 +41,14 @@ export function apply(ctx: ClientContext): void {
   const useCard = bindSnapshotSelector(controller.store)
 
   const injected = (): CopilotCardInjected => ({ controller, useCard })
-  ctx.slots.inject('settings.plugin.item', function* () {
+  // rc.1: the plugin configuration page lives on the Plugins page, keyed by
+  // `<bundle package>#<row id>` (the bundle's patch declares row
+  // `dsh-plugin-copilot`). The rc.2 plugin-config slot is retired.
+  ctx.slots.inject('plugins.row.config', function* () {
     yield ctx.slots.register(
       {
-        name: 'settings.plugin.item',
-        key: 'dsh-plugin-copilot',
+        name: 'plugins.row.config',
+        key: '@huanlin/dsh-plugin-copilot#dsh-plugin-copilot',
         locale: NS,
         inject: injected,
       },

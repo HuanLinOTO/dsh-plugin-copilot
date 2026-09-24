@@ -1,8 +1,9 @@
 /**
- * CopilotAuthCard — the `settings.plugin.item` slot occupant (key
- * `dsh-plugin-copilot`).
+ * CopilotAuthCard — the `plugins.row.config` slot occupant (key
+ * `@huanlin/dsh-plugin-copilot#dsh-plugin-copilot`).
  *
- * A card in the Plugin Config page rendering the onboarding state machine:
+ * The plugin's configuration page on the Plugins page, rendering the
+ * onboarding state machine:
  * unsupported (no pi-ai flow) / logged-out / pending (device code + polling
  * + cancel + prompts) / success / error, plus logged-in actions (sign out,
  * activate-route autofill when the profile is missing).
@@ -10,7 +11,8 @@
  * @module @huanlin/dsh-plugin-copilot/client/CopilotAuthCard
  */
 import { useState, type CSSProperties } from 'react'
-import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
+import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
+import type {} from '@deepseek-ai/dsh-client-ui-plugin-manager/client'
 import type { CopilotCardState } from './controller.ts'
 import type { CopilotAuthController } from './controller.ts'
 
@@ -20,8 +22,11 @@ export interface CopilotCardInjected {
   readonly useCard: <S>(select: (state: CopilotCardState) => S) => S
 }
 
-/** Full props: locale seat + inject. */
-export type CopilotCardProps = PropsLocale<'dsh-plugin-copilot'> & CopilotCardInjected
+/** Full props: the `plugins.row.config` owner share (view + form), locale seat, and inject. */
+export type CopilotCardProps =
+  PropsRuntime<'plugins.row.config'>
+  & PropsLocale<'dsh-plugin-copilot'>
+  & CopilotCardInjected
 
 const cardStyle: CSSProperties = {
   border: '1px solid var(--dsw-alias-border-l2, rgba(128,128,128,0.22))',
@@ -182,11 +187,15 @@ const CHEVRON_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"
  * @param props - locale + controller inject.
  * @returns a `<li>` card element.
  */
-export function CopilotAuthCard({ t, controller, useCard }: CopilotCardProps) {
+export function CopilotAuthCard({ view, t, controller, useCard }: CopilotCardProps) {
   const state = useCard(snapshot => snapshot)
   const [open, setOpen] = useState(false)
   const [promptAnswer, setPromptAnswer] = useState('')
   if (!state.loaded) void controller.load()
+
+  // The row detail page uses `summary` only when the package description is
+  // absent; render a one-liner there and the onboarding card otherwise.
+  if (view === 'summary') return t('card.intro')
 
   const unsupported = state.loaded && !state.status.flowAvailable
   // A login lifecycle in flight or freshly settled keeps the card open: the

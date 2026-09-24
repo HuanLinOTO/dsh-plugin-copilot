@@ -1,6 +1,6 @@
 {
   "name": "@huanlin/dsh-plugin-copilot",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "publishConfig": {
     "access": "public"
   },
@@ -36,8 +36,8 @@
       "inject": [
         "@deepseek-ai/dsh-client-locale",
         "@deepseek-ai/dsh-client-store",
+        "@deepseek-ai/dsh-client-ui-plugin-manager",
         "@deepseek-ai/dsh-client-ui-renderer",
-        "@deepseek-ai/dsh-client-ui-settings-plugins",
         "@deepseek-ai/dsh-client-ui-slots"
       ],
       "platform": "web"
@@ -51,17 +51,17 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-authorization": "^0.1.5-rc.1",
-    "@deepseek-ai/dsh-client-locale": "^0.1.5-rc.1",
-    "@deepseek-ai/dsh-client-store": "^0.1.5-rc.1",
-    "@deepseek-ai/dsh-client-ui-renderer": "^0.1.5-rc.1",
-    "@deepseek-ai/dsh-client-ui-settings-plugins": "^0.1.5-rc.1",
-    "@deepseek-ai/dsh-client-ui-slots": "^0.1.5-rc.1",
-    "@deepseek-ai/dsh-credentials": "^0.1.5-rc.1",
-    "@deepseek-ai/dsh-settings": "^0.1.5-rc.1",
-    "@deepseek-ai/dsh-tools": "^0.1.5-rc.1",
-    "react": "^18.2.0",
-    "schemastery": "^3.18.0"
+    "@deepseek-ai/dsh-authorization": "^0.1.7-rc.1",
+    "@deepseek-ai/dsh-client-locale": "^0.1.7-rc.1",
+    "@deepseek-ai/dsh-client-store": "^0.1.7-rc.1",
+    "@deepseek-ai/dsh-client-ui-plugin-manager": "^0.1.7-rc.1",
+    "@deepseek-ai/dsh-client-ui-renderer": "^0.1.7-rc.1",
+    "@deepseek-ai/dsh-client-ui-slots": "^0.1.7-rc.1",
+    "@deepseek-ai/dsh-credentials": "^0.1.7-rc.1",
+    "@deepseek-ai/dsh-settings": "^0.1.7-rc.1",
+    "@deepseek-ai/dsh-tools": "^0.1.7-rc.1",
+    "@deepseek-ai/schemastery": "^3.18.4",
+    "react": "^18.2.0"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/cordis": {
@@ -76,10 +76,10 @@
     "@deepseek-ai/dsh-client-store": {
       "optional": true
     },
-    "@deepseek-ai/dsh-client-ui-renderer": {
+    "@deepseek-ai/dsh-client-ui-plugin-manager": {
       "optional": true
     },
-    "@deepseek-ai/dsh-client-ui-settings-plugins": {
+    "@deepseek-ai/dsh-client-ui-renderer": {
       "optional": true
     },
     "@deepseek-ai/dsh-client-ui-slots": {
@@ -94,20 +94,20 @@
     "@deepseek-ai/dsh-tools": {
       "optional": true
     },
-    "react": {
+    "@deepseek-ai/schemastery": {
       "optional": true
     },
-    "schemastery": {
+    "react": {
       "optional": true
     }
   },
   "devDependencies": {
+    "@deepseek-ai/schemastery": "^3.18.4",
     "@types/node": "^22.20.1",
     "@types/react": "~18.3.31",
     "jsdom": "^30.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "schemastery": "^3.18.0",
     "tsdown": "^0.15.0",
     "typescript": "^5.9.2",
     "vitest": "^3.2.7"

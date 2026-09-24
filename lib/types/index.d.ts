@@ -14,14 +14,15 @@
  *     settings autofill that writes `llm-pi-ai.providers.github-copilot = {}`
  *     (flipping the route from dormant to active), and a read-only
  *     `copilot_status` tool;
- *   - browser half (`src/client/`): a `settings.plugin.item` card in the
- *     Plugins settings page rendering the device-flow panel.
+ *   - browser half (`src/client/`): a row-config card on the
+ *     Plugins page rendering the device-flow panel.
  *
  * @module @huanlin/dsh-plugin-copilot
  */
 import type { Context } from '@deepseek-ai/cordis';
+import type { Volatile } from '@deepseek-ai/cordis';
 import type { SettingsNamespace } from '@deepseek-ai/dsh-settings';
-import z from 'schemastery';
+import z from '@deepseek-ai/schemastery';
 export { registerCopilotGateway } from './gateway.ts';
 export { registerCopilotTools } from './tools.ts';
 export { COPILOT_PROVIDER, COPILOT_RECORD_KEY, COPILOT_SCOPE, COPILOT_SETTINGS_NS, findCopilotFlow, grantModelIds, joinStatus, recordAddress, } from './status.ts';
@@ -38,9 +39,10 @@ export interface Config {
     /**
      * GitHub Enterprise domain (e.g. `company.ghe.com`) the gateway answers the
      * Copilot flow's enterprise question with; blank serves github.com, which
-     * is why the question never reaches the card by default.
+     * is why the question never reaches the card by default. Volatile so a
+     * profile-form edit reaches the next sign-in without a remount.
      */
-    enterpriseDomain: string;
+    enterpriseDomain: Volatile<string>;
 }
 export declare const Config: z<Config>;
 /**

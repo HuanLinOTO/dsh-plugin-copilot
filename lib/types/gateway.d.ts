@@ -88,9 +88,10 @@ export interface GatewayDeps {
     updateSettings(patch: Record<string, unknown>): Promise<void>;
     /**
      * The configured GitHub Enterprise domain, auto-answered for the Copilot
-     * flow's enterprise question; blank or undefined serves github.com.
+     * flow's enterprise question; blank or undefined serves github.com. A thunk
+     * reads the live volatile config so a profile edit reaches the next sign-in.
      */
-    enterpriseDomain?: string;
+    enterpriseDomain?: string | (() => string);
 }
 /**
  * Register the `/copilot/api` route.

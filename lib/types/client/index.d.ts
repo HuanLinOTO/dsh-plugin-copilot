@@ -1,10 +1,10 @@
 /**
  * dsh-plugin-copilot — browser half.
  *
- * One registration: a `settings.plugin.item` card (key `dsh-plugin-copilot`)
- * in the Plugins settings page, rendering the Copilot onboarding state
- * machine (sign-in device-flow panel, route activation, sign-out) through
- * the host's `/copilot/api` gateway.
+ * One registration: a `plugins.row.config` card (key
+ * `@huanlin/dsh-plugin-copilot#dsh-plugin-copilot`) on the Plugins page,
+ * rendering the Copilot onboarding state machine (sign-in device-flow panel,
+ * route activation, sign-out) through the host's `/copilot/api` gateway.
  *
  * @module @huanlin/dsh-plugin-copilot/client
  */

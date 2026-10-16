@@ -11,12 +11,19 @@ import { act } from 'react'
 import { CopilotAuthCard } from '../src/client/CopilotAuthCard.tsx'
 import type { CopilotCardState } from '../src/client/controller.ts'
 import { CopilotAuthController } from '../src/client/controller.ts'
-import { en, type CopilotKey } from '../src/client/locales.ts'
+import { en } from '../src/client/locales.ts'
 import { bindSnapshotSelector } from '../src/client/bindSnapshotSelector.ts'
+import type { GlobalStandardProps } from '@deepseek-ai/dsh-client-ui-slots'
 
 ;(globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true
 
-const t = (key: CopilotKey): string => en[key]
+// Framework-injected standard hooks the card itself never calls; stubs follow
+// the official client spec pattern (selector-shaped, inert values).
+const usePanelInfo: GlobalStandardProps['usePanelInfo'] = selector => selector({ activePanelId: null })
+
+// A widening parameter keeps the mock assignable to `TranslateNS` (whose key
+// domain merges the shared `common` vocabulary the host injects at runtime).
+const t = (key: string): string => (en as Record<string, string>)[key] ?? key
 
 function stateWith(overrides: Partial<CopilotCardState>): CopilotCardState {
   return {
@@ -44,9 +51,11 @@ function renderState(state: CopilotCardState): HTMLElement {
   roots.push(root)
   act(() => {
     root.render(createElement(CopilotAuthCard, {
+      view: 'page',
       t,
       controller,
       useCard,
+      usePanelInfo,
     }))
   })
   return host

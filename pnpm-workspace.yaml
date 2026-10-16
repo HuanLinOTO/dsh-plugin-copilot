@@ -1,7 +1,16 @@
 allowBuilds:
   esbuild: true
+minimumReleaseAgeExclude:
+  - '@deepseek-ai/cosmokit@1.8.5'
+  - '@deepseek-ai/dsh-brand@0.1.7-rc.1 || 0.2.0-rc.1 || 0.2.1-alpha.5'
+  - '@deepseek-ai/dsh-client-ui-plugin-manager@0.1.7-rc.1 || 0.2.0-rc.1 || 0.2.1-alpha.5'
+  - '@deepseek-ai/dsh-timeout@0.1.7-rc.1 || 0.2.0-rc.1 || 0.2.1-alpha.5'
+  - '@deepseek-ai/dsh-typert-protocol@0.1.7-rc.1 || 0.2.0-rc.1 || 0.2.1-alpha.5'
+  - '@deepseek-ai/schemastery@3.18.4'
 overrides:
   '@deepseek-ai/cordis': link:D:/Projects/deepseek-harness/dsh/vendor/cordis
+  '@deepseek-ai/dsh-client-ui-plugin-manager': link:D:/Projects/deepseek-harness/dsh/packages/client/ui-plugin-manager
+  '@deepseek-ai/schemastery': link:D:/Projects/deepseek-harness/dsh/vendor/schemastery
   '@deepseek-ai/dsh-authorization': link:D:/Projects/deepseek-harness/dsh/packages/credentials/authorization
   '@deepseek-ai/dsh-credentials': link:D:/Projects/deepseek-harness/dsh/packages/credentials/credentials
   '@deepseek-ai/dsh-llm': link:D:/Projects/deepseek-harness/dsh/packages/llm/llm

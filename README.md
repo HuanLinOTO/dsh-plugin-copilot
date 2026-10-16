@@ -66,9 +66,10 @@ Host gateway (src/gateway.ts, ctx.webServer)
 
 ```powershell
 pnpm install
-pnpm run typecheck   # tsc --noEmit（类型经 ~/.dsh/source/current 解析）
-pnpm test            # vitest run（48 个用例：status join / gateway / 控制器 / 卡片渲染）
-pnpm run build       # tsdown（lib/index.js + lib/client.js）+ tsc 声明
+pnpm run typecheck         # tsc --noEmit（类型经 ~/.dsh/source/current 解析）
+pnpm run typecheck:tests   # tests/ 显式类型检查（tsconfig include 只含 src，需单独跑）
+pnpm test                  # vitest run（51 个用例：status join / gateway / 控制器 / 卡片渲染）
+pnpm run build             # tsdown（lib/index.js + lib/client.js）+ tsc 声明
 ```
 
 目录：`src/index.ts`（host 入口：命名空间注册 + gateway + 工具）· `src/status.ts`（状态 join 与 flow 探查）· `src/gateway.ts`（/copilot/api 路由与登录状态机）· `src/tools.ts`（copilot_status 工具）· `src/client/`（浏览器半：卡片 + 控制器 + 词典）。
@@ -86,7 +87,7 @@ dsh plugin --profile web add link:<本目录>
 
 ## 检查
 
-- `pnpm run typecheck` 零错误；`pnpm test` 48/48 通过（keyless，无真实 API 依赖）。
+- `pnpm run typecheck` 与 `pnpm run typecheck:tests` 零错误；`pnpm test` 51/51 通过（keyless，无真实 API 依赖）。
 - `lib/` 产物自包含（仅 peer 外部依赖 + node 内置），`node -e "import('./lib/index.js')"` 可直接加载；client bundle 以 `window.__ModuleLoader__.load` 包裹。
 - 合规：零源码 patch；预构建 `lib/` 入库（含 `@deepseek-ai/*` private peer，无 `prepare`）；同源 fence + JSON envelope。
 

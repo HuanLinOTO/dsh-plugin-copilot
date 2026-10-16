@@ -4,6 +4,7 @@
  * sequenced event stream, prompt answers, and disposal.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { Mock } from 'vitest'
 import { CopilotAuthController } from '../src/client/controller.ts'
 
 function jsonResponse(value: unknown, status = 200): Response {
@@ -27,7 +28,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-function stubFetch(routes: ScriptedRoute[]): vi.Mock {
+function stubFetch(routes: ScriptedRoute[]): Mock {
   const remaining = new Map(routes.map(route => [route.method, route]))
   const mock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const method = String(input).replace('/copilot/api/', '')
